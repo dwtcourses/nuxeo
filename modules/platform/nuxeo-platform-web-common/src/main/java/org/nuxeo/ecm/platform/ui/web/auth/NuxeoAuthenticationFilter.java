@@ -575,6 +575,7 @@ public class NuxeoAuthenticationFilter implements Filter {
                     return;
                 }
                 PluggableAuthenticationService svc = Framework.getService(PluggableAuthenticationService.class);
+                // XXX
                 new ComponentManager.Listener() {
                     // nullify service field if components are restarting
                     @Override

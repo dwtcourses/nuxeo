@@ -73,6 +73,7 @@ public class BulkComponent extends DefaultComponent {
         return descriptors.stream().filter(BulkActionDescriptor::isEnabled).collect(Collectors.toList());
     }
 
+    // XXX
     protected class ComponentListener implements ComponentManager.Listener {
         @Override
         public void afterStart(ComponentManager mgr, boolean isResume) {

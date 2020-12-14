@@ -309,6 +309,7 @@ public class StreamWorkManager extends WorkManagerImpl {
         }
     }
 
+    // XXX
     class ComponentListener implements ComponentManager.Listener {
         @Override
         public void beforeStop(ComponentManager mgr, boolean isStandby) {

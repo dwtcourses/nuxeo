@@ -44,6 +44,7 @@ public class NuxeoStandbyFilter implements Filter {
     @Override
     public void init(FilterConfig filterConfig) throws ServletException {
         controller = new Controller();
+        // XXX
         new ComponentManager.Listener() {
 
             @Override

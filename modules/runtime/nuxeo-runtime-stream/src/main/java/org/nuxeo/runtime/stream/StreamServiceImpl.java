@@ -247,6 +247,7 @@ public class StreamServiceImpl extends DefaultComponent implements StreamService
         processors.clear();
     }
 
+    // XXX
     protected class ComponentsLifeCycleListener implements ComponentManager.Listener {
         @Override
         public void afterStart(ComponentManager mgr, boolean isResume) {
