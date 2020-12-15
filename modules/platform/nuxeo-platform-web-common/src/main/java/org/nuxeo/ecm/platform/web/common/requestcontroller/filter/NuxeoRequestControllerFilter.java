@@ -70,13 +70,15 @@ public class NuxeoRequestControllerFilter implements Filter {
 
     protected static final int LOCK_TIMEOUT_S = 120;
 
+    protected IdempotentRequestHandler handler;
+
     // formatted http Expires: Thu, 01 Dec 1994 16:00:00 GMT
     public static final DateTimeFormatter HTTP_EXPIRES_DATE_FORMAT = ofPattern("EEE, dd MMM yyyy HH:mm:ss z").withZone(
             ZoneId.of("GMT")).withLocale(Locale.US);
 
     @Override
     public void init(FilterConfig filterConfig) {
-        // nothing to do
+        handler = new IdempotentRequestHandler(filterConfig);
     }
 
     @Override
@@ -136,7 +138,7 @@ public class NuxeoRequestControllerFilter implements Filter {
                     buffered = true;
                 }
             }
-            chain.doFilter(request, response);
+            handler.handle(request, response, chain);
         } catch (IOException | ServletException | RuntimeException e) {
             // Don't call response.sendError, because it commits the response
             // which prevents NuxeoExceptionFilter from returning a custom error page.
@@ -265,8 +267,7 @@ public class NuxeoRequestControllerFilter implements Filter {
         }
     }
 
-    protected void addHeaders(HttpServletRequest request, HttpServletResponse response,
-            RequestFilterConfig config) {
+    protected void addHeaders(HttpServletRequest request, HttpServletResponse response, RequestFilterConfig config) {
         addConfiguredHeaders(response);
         if (request.getMethod().equals("GET")) {
             addCacheHeaders(response, config);
