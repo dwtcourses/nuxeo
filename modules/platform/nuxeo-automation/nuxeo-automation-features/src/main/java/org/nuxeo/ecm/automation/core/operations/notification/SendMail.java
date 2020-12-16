@@ -19,6 +19,7 @@
 package org.nuxeo.ecm.automation.core.operations.notification;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
+import static org.nuxeo.ecm.core.management.api.AdministrativeStatus.PASSIVE;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -58,6 +59,7 @@ import org.nuxeo.ecm.core.api.model.Property;
 import org.nuxeo.ecm.core.api.model.impl.ListProperty;
 import org.nuxeo.ecm.core.api.model.impl.MapProperty;
 import org.nuxeo.ecm.core.api.model.impl.primitives.BlobProperty;
+import org.nuxeo.ecm.core.management.api.AdministrativeStatusManager;
 import org.nuxeo.ecm.platform.ec.notification.service.NotificationServiceHelper;
 import org.nuxeo.ecm.platform.rendering.api.RenderingException;
 import org.nuxeo.runtime.api.Framework;
@@ -165,34 +167,38 @@ public class SendMail {
         // TODO should sent one by one to each recipient? and have the template
         // rendered for each recipient? Use: "mailto" var name?
         try {
-            Map<String, Object> map = Scripting.initBindings(ctx);
-            // do not use document wrapper which is working only in mvel.
-            map.put("Document", doc);
-            map.put("docUrl",
-                    createDocUrlWithToken(MailTemplateHelper.getDocumentUrl(doc, viewId), (String) map.get("token")));
-            map.put("subject", subject);
-            map.put("to", to);
-            map.put("toResolved", MailBox.fetchPersonsFromList(to, isStrict));
-            map.put("from", from);
-            map.put("fromResolved", MailBox.fetchPersonsFromString(from, isStrict));
-            map.put("cc", cc);
-            map.put("ccResolved", MailBox.fetchPersonsFromList(cc, isStrict));
-            map.put("bcc", bcc);
-            map.put("bccResolved", MailBox.fetchPersonsFromList(bcc, isStrict));
-            map.put("replyto", replyto);
-            map.put("replytoResolved", MailBox.fetchPersonsFromList(replyto, isStrict));
-            map.put("viewId", viewId);
-            map.put("baseUrl", NotificationServiceHelper.getNotificationService().getServerUrlPrefix());
-            map.put("Runtime", Framework.getRuntime());
-            Mailer.Message msg = createMessage(doc, getContent(), map);
-            msg.setSubject(subject, "UTF-8");
-            msg.setSentDate(new Date());
+            AdministrativeStatusManager asm = Framework.getService(AdministrativeStatusManager.class);
+            if (asm == null || !asm.getStatus("org.nuxeo.ecm.smtp").getState().equals(PASSIVE)) {
+                Map<String, Object> map = Scripting.initBindings(ctx);
+                // do not use document wrapper which is working only in mvel.
+                map.put("Document", doc);
+                map.put("docUrl", createDocUrlWithToken(MailTemplateHelper.getDocumentUrl(doc, viewId),
+                        (String) map.get("token")));
+                map.put("subject", subject);
+                map.put("to", to);
+                map.put("toResolved", MailBox.fetchPersonsFromList(to, isStrict));
+                map.put("from", from);
+                map.put("fromResolved", MailBox.fetchPersonsFromString(from, isStrict));
+                map.put("cc", cc);
+                map.put("ccResolved", MailBox.fetchPersonsFromList(cc, isStrict));
+                map.put("bcc", bcc);
+                map.put("bccResolved", MailBox.fetchPersonsFromList(bcc, isStrict));
+                map.put("replyto", replyto);
+                map.put("replytoResolved", MailBox.fetchPersonsFromList(replyto, isStrict));
+                map.put("viewId", viewId);
+                map.put("baseUrl", NotificationServiceHelper.getNotificationService().getServerUrlPrefix());
+                map.put("Runtime", Framework.getRuntime());
+                Mailer.Message msg = createMessage(doc, getContent(), map);
+                msg.setSubject(subject, "UTF-8");
+                msg.setSentDate(new Date());
 
-            addMailBoxInfo(msg, map);
+                addMailBoxInfo(msg, map);
 
-            msg.send();
+                msg.send();
+            }
         } catch (NuxeoException | TemplateException | RenderingException | OperationException | MessagingException
                 | IOException e) {
+            System.out.println("Class" + e.getClass() + " :" + e.getMessage());
             if (rollbackOnError) {
                 throw e;
             } else {
