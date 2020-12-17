@@ -60,6 +60,9 @@ public class SingleRegistry extends AbstractRegistry implements Registry {
         Object contrib;
         XAnnotatedMember merge = xObject.getMerge();
         if (merge != null && Boolean.TRUE.equals(merge.getValue(ctx, element))) {
+            if (contribution != null && xObject.getCompatWarnOnMerge() && !merge.hasValue(ctx, element)) {
+                // warn
+            }
             contrib = xObject.newInstance(ctx, element, contribution);
         } else {
             contrib = xObject.newInstance(ctx, element);

@@ -89,7 +89,11 @@ public class MapRegistry extends AbstractRegistry implements Registry {
         Object contrib;
         XAnnotatedMember merge = xObject.getMerge();
         if (merge != null && Boolean.TRUE.equals(merge.getValue(ctx, element))) {
-            contrib = xObject.newInstance(ctx, element, contributions.get(id));
+            Object contribution = contributions.get(id);
+            if (contribution != null && xObject.getCompatWarnOnMerge() && !merge.hasValue(ctx, element)) {
+                // warn
+            }
+            contrib = xObject.newInstance(ctx, element, contribution);
         } else {
             contrib = xObject.newInstance(ctx, element);
         }
